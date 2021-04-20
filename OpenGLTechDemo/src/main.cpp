@@ -14,18 +14,24 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
+#include "IMGUI/imgui.h"
+#include "IMGUI/imgui_impl_glfw.h"
+#include "IMGUI/imgui_impl_opengl3.h"
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window);
 
-const unsigned int SCR_WIDTH = 800, SCR_HEIGHT = 600;
+const unsigned int SCR_WIDTH = 1280, SCR_HEIGHT = 720;
 
 // camera
 Camera camera = Camera(glm::vec3(0.0f, 0.0f, -3.0f), glm::vec3(0.0f, 1.0f, 0.0f), 0.0f, 0.0f);
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
+bool enableCameraMovement = true;
 
 // timing
 float deltaTime = 0.0f;
@@ -49,14 +55,21 @@ int main()
 	glfwMakeContextCurrent(mainWindow);
 	glfwSetFramebufferSizeCallback(mainWindow, framebuffer_size_callback);
 	glfwSetCursorPosCallback(mainWindow, mouse_callback);
+	glfwSetKeyCallback(mainWindow, key_callback);
 	glfwSetScrollCallback(mainWindow, scroll_callback);
-	glfwSetInputMode(mainWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	//glfwSetInputMode(mainWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	//initialize glad
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
 		std::cout << "Failed to initialize GLAD." << std::endl;
 		return -1;
 	}
+
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGui_ImplGlfw_InitForOpenGL(mainWindow, true);
+	ImGui::StyleColorsDark();
+	ImGui_ImplOpenGL3_Init((char*)glGetString(330));
 
 	glEnable(GL_DEPTH_TEST);
 
@@ -170,8 +183,18 @@ int main()
 	myShader.use();
 	myShader.setInt("texture1", 0);
 
+	// ImGUI state
+	bool show_demo_window = true;
+	bool show_another_window = false;
+	ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+
 	//render loop
 	while (!glfwWindowShouldClose(mainWindow)) {
+
+		// start ImGUI
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
 
 		// per-frame time logic
 		float currentFrame = glfwGetTime();
@@ -181,7 +204,7 @@ int main()
 		// input
 		processInput(mainWindow);
 
-		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+		glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		glActiveTexture(GL_TEXTURE0);
@@ -207,6 +230,20 @@ int main()
 		//int offsetLocation = glGetUniformLocation(myShader.ID, "offset");
 		//glUniform1f(offsetLocation, offset);
 
+		// 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
+		{
+			ImGui::Begin("Transformations");                          // Create a window called "Hello, world!" and append into it.
+
+			for (size_t i = 0; i < 10; i++) {
+				std::string slidername = "Cube " + std::to_string(i);
+				ImGui::SliderFloat3(slidername.c_str(), glm::value_ptr(cubePositions[i]), 0.0f, 1.0f);
+			}
+			ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color			
+
+			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+			ImGui::End();
+		}
+
 		glBindVertexArray(VAO);
 
 		for (size_t i = 0; i < 10; i++) {
@@ -219,9 +256,17 @@ int main()
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
 
+		ImGui::Render();
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
 		glfwSwapBuffers(mainWindow);
 		glfwPollEvents();
 	}
+
+	// shutdown ImGUI
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();
 
 	//deallocate all resources
 	glDeleteVertexArrays(1, &VAO);
@@ -260,20 +305,31 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 // glfw: whenever the mouse moves, this callback is called
 // -------------------------------------------------------
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
-{
-	if (firstMouse) {
+{	
+	if (enableCameraMovement)
+	{
+		if (firstMouse) {
+			lastX = xpos;
+			lastY = ypos;
+			firstMouse = false;
+		}
+	
+		float xoffset = xpos - lastX;
+		float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
+	
 		lastX = xpos;
 		lastY = ypos;
-		firstMouse = false;
+	
+		camera.ProcessMouseMovement(xoffset, yoffset);
 	}
+}
 
-	float xoffset = xpos - lastX;
-	float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
-
-	lastX = xpos;
-	lastY = ypos;
-
-	camera.ProcessMouseMovement(xoffset, yoffset);
+// glfw: whenever a button is pressed, this callback is called
+// ----------------------------------------------------------------------
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+	if (key == GLFW_KEY_LEFT_CONTROL && action == GLFW_PRESS)
+		enableCameraMovement = !enableCameraMovement;
 }
 
 // glfw: whenever the mouse scroll wheel scrolls, this callback is called

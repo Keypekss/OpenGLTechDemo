@@ -76,7 +76,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)OpenGLTechDemo\Dependencies\GLAD\include;$(SolutionDir)OpenGLTechDemo\Dependencies\GLFW\include;$(SolutionDir)OpenGLTechDemo\Dependencies\GLM\;$(SolutionDir)OpenGLTechDemo\Dependencies\ASSIMP\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)OpenGLTechDemo\Dependencies\GLAD\include;$(SolutionDir)OpenGLTechDemo\Dependencies\GLFW\include;$(SolutionDir)OpenGLTechDemo\Dependencies\GLM\;$(SolutionDir)OpenGLTechDemo\Dependencies\ASSIMP\include;$(SolutionDir)OpenGLTechDemo\Dependencies\IMGUI;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -103,7 +103,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)OpenGLTechDemo\Dependencies\GLAD\include;$(SolutionDir)OpenGLTechDemo\Dependencies\GLFW\include;$(SolutionDir)OpenGLTechDemo\Dependencies\GLM\;$(SolutionDir)OpenGLTechDemo\Dependencies\ASSIMP\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)OpenGLTechDemo\Dependencies\GLAD\include;$(SolutionDir)OpenGLTechDemo\Dependencies\GLFW\include;$(SolutionDir)OpenGLTechDemo\Dependencies\GLM\;$(SolutionDir)OpenGLTechDemo\Dependencies\ASSIMP\include;$(SolutionDir)OpenGLTechDemo\Dependencies\IMGUI;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -129,6 +129,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Dependencies\IMGUI\IMGUI\imgui.cpp" />
+    <ClCompile Include="Dependencies\IMGUI\IMGUI\imgui_demo.cpp" />
+    <ClCompile Include="Dependencies\IMGUI\IMGUI\imgui_draw.cpp" />
+    <ClCompile Include="Dependencies\IMGUI\IMGUI\imgui_impl_glfw.cpp" />
+    <ClCompile Include="Dependencies\IMGUI\IMGUI\imgui_impl_opengl3.cpp" />
+    <ClCompile Include="Dependencies\IMGUI\IMGUI\imgui_tables.cpp" />
+    <ClCompile Include="Dependencies\IMGUI\IMGUI\imgui_widgets.cpp" />
     <ClCompile Include="src\Camera.cpp" />
     <ClCompile Include="Dependencies\GLAD\src\glad.c" />
     <ClCompile Include="Dependencies\GLM\glm\detail\glm.cpp" />
@@ -137,6 +144,14 @@
     <ClCompile Include="src\glad.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Dependencies\IMGUI\IMGUI\imconfig.h" />
+    <ClInclude Include="Dependencies\IMGUI\IMGUI\imgui.h" />
+    <ClInclude Include="Dependencies\IMGUI\IMGUI\imgui_impl_glfw.h" />
+    <ClInclude Include="Dependencies\IMGUI\IMGUI\imgui_impl_opengl3.h" />
+    <ClInclude Include="Dependencies\IMGUI\IMGUI\imgui_internal.h" />
+    <ClInclude Include="Dependencies\IMGUI\IMGUI\imstb_rectpack.h" />
+    <ClInclude Include="Dependencies\IMGUI\IMGUI\imstb_textedit.h" />
+    <ClInclude Include="Dependencies\IMGUI\IMGUI\imstb_truetype.h" />
     <ClInclude Include="src\Camera.h" />
     <ClInclude Include="Dependencies\ASSIMP\include\assimp\aabb.h" />
     <ClInclude Include="Dependencies\ASSIMP\include\assimp\ai_assert.h" />
