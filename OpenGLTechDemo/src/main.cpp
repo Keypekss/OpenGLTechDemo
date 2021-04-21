@@ -37,6 +37,9 @@ bool enableCameraMovement = true;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
+// light position
+glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
+
 int main()
 {
 	//initialize glfw and configure
@@ -65,6 +68,7 @@ int main()
 		return -1;
 	}
 
+	// initialize ImGUI
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGui_ImplGlfw_InitForOpenGL(mainWindow, true);
@@ -73,51 +77,56 @@ int main()
 
 	glEnable(GL_DEPTH_TEST);
 
-	Shader myShader("Shaders/vertexShader.vert", "Shaders/fragmentShader.frag");
+	// load shaders
+	Shader lightingShader("Shaders/lighting.vert", "Shaders/lighting.frag");
+	Shader lightCubeShader("Shaders/light_cube.vert", "Shaders/light_cube.frag");
 
-	//set up vertices
+	// cubes
+	// -------------------
+
+	//set up cube vertices
 	float vertices[] = {
-		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-		 0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+		 -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,  0.0f,  0.0f, -1.0f,
+		  0.5f, -0.5f, -0.5f,  1.0f, 0.0f,  0.0f,  0.0f, -1.0f,
+		  0.5f,  0.5f, -0.5f,  1.0f, 1.0f,  0.0f,  0.0f, -1.0f,
+		  0.5f,  0.5f, -0.5f,  1.0f, 1.0f,  0.0f,  0.0f, -1.0f,
+		 -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,  0.0f,  0.0f, -1.0f,
+		 -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,  0.0f,  0.0f, -1.0f,
 
-		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-		 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-		-0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+		 -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,  0.0f,  0.0f,  1.0f,
+		  0.5f, -0.5f,  0.5f,  1.0f, 0.0f,  0.0f,  0.0f,  1.0f,
+		  0.5f,  0.5f,  0.5f,  1.0f, 1.0f,  0.0f,  0.0f,  1.0f,
+		  0.5f,  0.5f,  0.5f,  1.0f, 1.0f,  0.0f,  0.0f,  1.0f,
+		 -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,  0.0f,  0.0f,  1.0f,
+		 -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,  0.0f,  0.0f,  1.0f,
 
-		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-		-0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		 -0.5f,  0.5f,  0.5f,  1.0f, 0.0f, -1.0f,  0.0f,  0.0f,
+		 -0.5f,  0.5f, -0.5f,  1.0f, 1.0f, -1.0f,  0.0f,  0.0f,
+		 -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, -1.0f,  0.0f,  0.0f,
+		 -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, -1.0f,  0.0f,  0.0f,
+		 -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, -1.0f,  0.0f,  0.0f,
+		 -0.5f,  0.5f,  0.5f,  1.0f, 0.0f, -1.0f,  0.0f,  0.0f,
 
-		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		 0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		  0.5f,  0.5f,  0.5f,  1.0f, 0.0f,  1.0f,  0.0f,  0.0f,
+		  0.5f,  0.5f, -0.5f,  1.0f, 1.0f,  1.0f,  0.0f,  0.0f,
+		  0.5f, -0.5f, -0.5f,  0.0f, 1.0f,  1.0f,  0.0f,  0.0f,
+		  0.5f, -0.5f, -0.5f,  0.0f, 1.0f,  1.0f,  0.0f,  0.0f,
+		  0.5f, -0.5f,  0.5f,  0.0f, 0.0f,  1.0f,  0.0f,  0.0f,
+		  0.5f,  0.5f,  0.5f,  1.0f, 0.0f,  1.0f,  0.0f,  0.0f,
 
-		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		 0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
-		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		 -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,  0.0f, -1.0f,  0.0f,
+		  0.5f, -0.5f, -0.5f,  1.0f, 1.0f,  0.0f, -1.0f,  0.0f,
+		  0.5f, -0.5f,  0.5f,  1.0f, 0.0f,  0.0f, -1.0f,  0.0f,
+		  0.5f, -0.5f,  0.5f,  1.0f, 0.0f,  0.0f, -1.0f,  0.0f,
+		 -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,  0.0f, -1.0f,  0.0f,
+		 -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,  0.0f, -1.0f,  0.0f,
 
-		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-		-0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
-		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f
+		 -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,  0.0f,  1.0f,  0.0f,
+		  0.5f,  0.5f, -0.5f,  1.0f, 1.0f,  0.0f,  1.0f,  0.0f,
+		  0.5f,  0.5f,  0.5f,  1.0f, 0.0f,  0.0f,  1.0f,  0.0f,
+		  0.5f,  0.5f,  0.5f,  1.0f, 0.0f,  0.0f,  1.0f,  0.0f,
+		 -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,  0.0f,  1.0f,  0.0f,
+		 -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,  0.0f,  1.0f,  0.0f
 	};
 	// world space positions of our cubes
 	glm::vec3 cubePositions[] = {
@@ -131,25 +140,29 @@ int main()
 		glm::vec3(1.5f,  2.0f, -2.5f),
 		glm::vec3(1.5f,  0.2f, -1.5f),
 		glm::vec3(-1.3f,  1.0f, -1.5f)
-	};
-
-	unsigned int VAO, VBO;
-	glGenVertexArrays(1, &VAO);
+	};	
+	
+	unsigned int cubeVAO, VBO;
+	glGenVertexArrays(1, &cubeVAO);
 	glGenBuffers(1, &VBO);
 
 	// bind VAO first then bind VBO and configure vertex attributes
-	glBindVertexArray(VAO);
+	glBindVertexArray(cubeVAO);
 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
 	// position attributes
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), nullptr);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), nullptr);
 
 	// texture coord attributes
 	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+
+	// normal coord attributes
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float)));
 
 	//unbind VBO and VAO
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -180,8 +193,20 @@ int main()
 	}
 	stbi_image_free(imageFile);
 
-	myShader.use();
-	myShader.setInt("texture1", 0);
+	lightingShader.use();
+	lightingShader.setInt("texture1", 0);
+
+	// lights
+	// -----------
+
+	// set up light vertices
+	unsigned int lightCubeVAO;
+	glGenVertexArrays(1, &lightCubeVAO);
+	glBindVertexArray(lightCubeVAO);
+
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
 
 	// ImGUI state
 	bool show_demo_window = true;
@@ -210,50 +235,70 @@ int main()
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, texture1);
 
-		myShader.use();
+
+		// set cubes' shader's uniforms
+		// ----------------------------
+		lightingShader.use();
 
 		glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-		myShader.setMat4("projection", projection);
+		lightingShader.setMat4("projection", projection);
 
 		// camera/view transformation
 		glm::mat4 view = camera.GetViewMatrix();
-		myShader.setMat4("view", view);
+		lightingShader.setMat4("view", view);
 
-		unsigned int uniformModel = glGetUniformLocation(myShader.ID, "model");
-		unsigned int uniformView = glGetUniformLocation(myShader.ID, "view");
+		glm::vec3 objColor = glm::vec3(1.0f, 0.5f, 0.31f);
+		lightingShader.setVec3("objectColor", objColor);
+		glm::vec3 lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
+		lightingShader.setVec3("lightColor", lightColor);
+		lightingShader.setVec3("lightPos", lightPos);
+		lightingShader.setVec3("viewPos", camera.Position);
 
-		myShader.setMat4("view", view);
-		myShader.setMat4("projection", projection);
-
-		//float timeValue = glfwGetTime();
-		//float offset = sin(timeValue) / 2;
-		//int offsetLocation = glGetUniformLocation(myShader.ID, "offset");
-		//glUniform1f(offsetLocation, offset);
-
-		// 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
-		{
-			ImGui::Begin("Transformations");                          // Create a window called "Hello, world!" and append into it.
-
-			for (size_t i = 0; i < 10; i++) {
-				std::string slidername = "Cube " + std::to_string(i);
-				ImGui::SliderFloat3(slidername.c_str(), glm::value_ptr(cubePositions[i]), 0.0f, 1.0f);
-			}
-			ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color			
-
-			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-			ImGui::End();
-		}
-
-		glBindVertexArray(VAO);
+		// draw cubes
+		glBindVertexArray(cubeVAO);
 
 		for (size_t i = 0; i < 10; i++) {
 			glm::mat4 model = glm::mat4(1.0f);
 			model = glm::translate(model, cubePositions[i]);
 			float angle = 20.0f * i;
 			model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-			myShader.setMat4("model", model);
+			lightingShader.setMat4("model", model);
 
 			glDrawArrays(GL_TRIANGLES, 0, 36);
+		}
+
+
+		// lighting
+		// ----------------------
+		// draw the lamp object
+		glm::mat4 model = glm::mat4(1.0f);
+		lightCubeShader.use();
+		lightCubeShader.setMat4("projection", projection);
+		lightCubeShader.setMat4("view", view);		
+		model = glm::translate(model, lightPos);
+		model = glm::scale(model, glm::vec3(0.2f));
+		lightCubeShader.setMat4("model", model);
+
+		glBindVertexArray(lightCubeVAO);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+		// ImGui
+		// ----------		
+		{
+			ImGui::Begin("Transformations");                          // Create a window called "Hello, world!" and append into it.
+
+			// edit cube positions in run time
+			for (size_t i = 0; i < 10; i++) {
+				std::string slidername = "Cube " + std::to_string(i);
+				ImGui::SliderFloat3(slidername.c_str(), glm::value_ptr(cubePositions[i]), 0.0f, 1.0f);
+			}
+			std::string slidername = "Light";
+			ImGui::SliderFloat3(slidername.c_str(), glm::value_ptr(lightPos), -10.0f, 10.0f);
+
+			ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color			
+
+			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+			ImGui::End();
 		}
 
 		ImGui::Render();
@@ -269,7 +314,8 @@ int main()
 	ImGui::DestroyContext();
 
 	//deallocate all resources
-	glDeleteVertexArrays(1, &VAO);
+	glDeleteVertexArrays(1, &cubeVAO);
+	glDeleteVertexArrays(1, &lightCubeVAO);
 	glDeleteBuffers(1, &VBO);
 
 	glfwTerminate();

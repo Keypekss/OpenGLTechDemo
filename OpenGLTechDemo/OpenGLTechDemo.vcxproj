@@ -666,6 +666,10 @@
     <None Include="Dependencies\GLM\glm\gtx\vector_query.inl" />
     <None Include="Dependencies\GLM\glm\gtx\wrap.inl" />
     <None Include="Shaders\fragmentShader.frag" />
+    <None Include="Shaders\lighting.frag" />
+    <None Include="Shaders\lighting.vert" />
+    <None Include="Shaders\light_cube.frag" />
+    <None Include="Shaders\light_cube.vert" />
     <None Include="Shaders\vertexShader.vert" />
   </ItemGroup>
   <ItemGroup>
