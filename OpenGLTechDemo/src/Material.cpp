@@ -1,21 +1,23 @@
 #include "Material.h"
 
-Material::Material()
+Material::Material(Shader &shader)
 {
+	this->shader = shader;
 	SpecularIntensity = 0.0f;
 	Shininess = 0.0f;
 }
 
-Material::Material(float sIntensity, float shine)
+Material::Material(Shader &shader, float sIntensity, float shine)
 {
+	this->shader = shader;
 	SpecularIntensity = sIntensity;
 	Shininess = shine;
 }
 
-void Material::UseMaterial(unsigned int specularIntensityLocation, unsigned int shininessLocation)
+void Material::UseMaterial(float specularIntensity, float shininess)
 {
-	glUniform1f(specularIntensityLocation, SpecularIntensity);
-	glUniform1f(shininessLocation, Shininess);
+	this->shader.setFloat("material.specularIntensity", specularIntensity);
+	this->shader.setFloat("material.shininess", shininess);
 }
 
 Material::~Material() = default;

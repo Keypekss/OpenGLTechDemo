@@ -13,7 +13,7 @@ struct Material {
 
 struct Light
 {
-	vec3 colour;
+	vec3 color;
 	vec3 ambient;
 	vec3 diffuse;
 	vec3 specular;
@@ -44,11 +44,12 @@ struct SpotLight {
 };
 
 #define NR_POINT_LIGHTS 4
+#define NR_SPOT_LIGHTS 1
 
 uniform vec3 viewPos;
 uniform DirLight dirLight;
 uniform PointLight pointLights[NR_POINT_LIGHTS];
-uniform SpotLight spotLight;
+uniform SpotLight spotLights[NR_SPOT_LIGHTS];
 uniform Material material;
 uniform sampler2D texture1;
 
@@ -71,7 +72,8 @@ void main()
         finalColor += CalcPointLight(pointLights[i], norm, FragPos, viewDir);  
 
     // phase 3: spot light
-    finalColor += CalcSpotLight(spotLight, norm, FragPos, viewDir);    
+	for(int i = 0; i < NR_SPOT_LIGHTS; i++)
+		finalColor += CalcSpotLight(spotLights[i], norm, FragPos, viewDir);    
 
     FragColor = texture(texture1, texCoord) * vec4(finalColor, 1.0);
 }

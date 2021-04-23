@@ -136,6 +136,10 @@
     <ClCompile Include="Dependencies\IMGUI\IMGUI\imgui_impl_opengl3.cpp" />
     <ClCompile Include="Dependencies\IMGUI\IMGUI\imgui_tables.cpp" />
     <ClCompile Include="Dependencies\IMGUI\IMGUI\imgui_widgets.cpp" />
+    <ClCompile Include="src\SpotLight.cpp" />
+    <ClCompile Include="src\PointLight.cpp" />
+    <ClCompile Include="src\DirectionalLight.cpp" />
+    <ClCompile Include="src\Light.cpp" />
     <ClCompile Include="src\Material.cpp" />
     <ClCompile Include="src\Camera.cpp" />
     <ClCompile Include="Dependencies\GLAD\src\glad.c" />
@@ -153,6 +157,10 @@
     <ClInclude Include="Dependencies\IMGUI\IMGUI\imstb_rectpack.h" />
     <ClInclude Include="Dependencies\IMGUI\IMGUI\imstb_textedit.h" />
     <ClInclude Include="Dependencies\IMGUI\IMGUI\imstb_truetype.h" />
+    <ClInclude Include="src\SpotLight.h" />
+    <ClInclude Include="src\PointLight.h" />
+    <ClInclude Include="src\DirectionalLight.h" />
+    <ClInclude Include="src\Light.h" />
     <ClInclude Include="src\Material.h" />
     <ClInclude Include="src\Camera.h" />
     <ClInclude Include="Dependencies\ASSIMP\include\assimp\aabb.h" />
