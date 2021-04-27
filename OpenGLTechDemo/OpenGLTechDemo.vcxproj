@@ -136,6 +136,8 @@
     <ClCompile Include="Dependencies\IMGUI\IMGUI\imgui_impl_opengl3.cpp" />
     <ClCompile Include="Dependencies\IMGUI\IMGUI\imgui_tables.cpp" />
     <ClCompile Include="Dependencies\IMGUI\IMGUI\imgui_widgets.cpp" />
+    <ClCompile Include="src\Model.cpp" />
+    <ClCompile Include="src\Mesh.cpp" />
     <ClCompile Include="src\SpotLight.cpp" />
     <ClCompile Include="src\PointLight.cpp" />
     <ClCompile Include="src\DirectionalLight.cpp" />
@@ -146,7 +148,7 @@
     <ClCompile Include="Dependencies\GLM\glm\detail\glm.cpp" />
     <ClCompile Include="src\Shader.cpp" />
     <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\glad.c" />
+    <ClCompile Include="src\Texture.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Dependencies\IMGUI\IMGUI\imconfig.h" />
@@ -157,6 +159,8 @@
     <ClInclude Include="Dependencies\IMGUI\IMGUI\imstb_rectpack.h" />
     <ClInclude Include="Dependencies\IMGUI\IMGUI\imstb_textedit.h" />
     <ClInclude Include="Dependencies\IMGUI\IMGUI\imstb_truetype.h" />
+    <ClInclude Include="src\Model.h" />
+    <ClInclude Include="src\Mesh.h" />
     <ClInclude Include="src\SpotLight.h" />
     <ClInclude Include="src\PointLight.h" />
     <ClInclude Include="src\DirectionalLight.h" />
@@ -528,6 +532,7 @@
     <ClInclude Include="Dependencies\GLM\glm\vector_relational.hpp" />
     <ClInclude Include="src\Shader.h" />
     <ClInclude Include="src\stb_image.h" />
+    <ClInclude Include="src\Texture.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="assimp-vc141-mt.dll" />
@@ -675,6 +680,7 @@
     <None Include="Dependencies\GLM\glm\gtx\vector_angle.inl" />
     <None Include="Dependencies\GLM\glm\gtx\vector_query.inl" />
     <None Include="Dependencies\GLM\glm\gtx\wrap.inl" />
+    <None Include="Resources\textures\dragon cinema.fbx" />
     <None Include="Shaders\fragmentShader.frag" />
     <None Include="Shaders\lighting.frag" />
     <None Include="Shaders\lighting.vert" />
@@ -687,7 +693,14 @@
     <Library Include="Dependencies\GLFW\lib-vc2017\glfw3.lib" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="Resources\container.jpg" />
+    <Image Include="Resources\textures\7da2bb91bc21ed2c943bef29cb22e564.jpg" />
+    <Image Include="Resources\textures\dragon final normal.tif" />
+    <Image Include="Resources\textures\llama-fuego-fuego-fondo-textura_3236-78.jpg" />
+    <Image Include="Resources\textures\PicsArt_11-30-01.25.29.jpg" />
+    <Image Include="Resources\textures\PicsArt_11-30-01.28.08.jpg" />
+    <Image Include="Resources\textures\textura dragon.tif" />
+    <Image Include="Resources\textures\textura-fondo-alfombra-roja_103740-96.jpg" />
+    <Image Include="Resources\textures\textura-superficie-rugosa-pintada-amarillo-dorado-dorado_89245-406.jpg" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

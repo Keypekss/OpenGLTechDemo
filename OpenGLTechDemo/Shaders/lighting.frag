@@ -51,7 +51,7 @@ uniform DirLight dirLight;
 uniform PointLight pointLights[NR_POINT_LIGHTS];
 uniform SpotLight spotLights[NR_SPOT_LIGHTS];
 uniform Material material;
-uniform sampler2D texture1;
+uniform sampler2D floor;
 
 // function prototypes
 vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir);
@@ -60,7 +60,6 @@ vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir);
 
 void main()
 {    
-
     vec3 norm = normalize(Normal);
     vec3 viewDir = normalize(viewPos - FragPos);    
 
@@ -75,7 +74,7 @@ void main()
 	for(int i = 0; i < NR_SPOT_LIGHTS; i++)
 		finalColor += CalcSpotLight(spotLights[i], norm, FragPos, viewDir);    
 
-    FragColor = texture(texture1, texCoord) * vec4(finalColor, 1.0);
+    FragColor = texture(floor, texCoord) * vec4(finalColor, 1.0);
 }
 
 vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir)
@@ -94,7 +93,7 @@ vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir)
     vec3 diffuse = light.base.diffuse * diff;
     vec3 specular = light.base.specular * spec;
 
-	return (ambient + diffuse + specular);
+	return (ambient + diffuse + specular) * light.base.color;
 }
 
 // calculates the color when using a point light.
@@ -122,7 +121,7 @@ vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
     diffuse *= attenuation;
     specular *= attenuation;
 
-	return (ambient + diffuse + specular);
+	return (ambient + diffuse + specular) * light.base.color;
 }
 
 // calculates the color when using a spot light.
@@ -155,5 +154,5 @@ vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
     diffuse *= attenuation * intensity;
     specular *= attenuation * intensity;
 
-	return (ambient + diffuse + specular);
+	return (ambient + diffuse + specular) * light.base.base.color;
 }

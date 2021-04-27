@@ -21,9 +21,6 @@
     <ClCompile Include="Dependencies\GLM\glm\detail\glm.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\glad.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -67,6 +64,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\SpotLight.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Mesh.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Model.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Texture.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -1208,6 +1214,15 @@
     <ClInclude Include="src\SpotLight.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\Mesh.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Model.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Texture.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Dependencies\ASSIMP\include\assimp\color4.inl">
@@ -1649,13 +1664,35 @@
     <None Include="Shaders\lighting.frag" />
     <None Include="Shaders\light_cube.vert" />
     <None Include="Shaders\light_cube.frag" />
+    <None Include="Resources\textures\dragon cinema.fbx" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="Dependencies\ASSIMP\lib\assimp-vc141-mt.lib" />
     <Library Include="Dependencies\GLFW\lib-vc2017\glfw3.lib" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="Resources\container.jpg">
+    <Image Include="Resources\textures\7da2bb91bc21ed2c943bef29cb22e564.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\textures\dragon final normal.tif">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\textures\llama-fuego-fuego-fondo-textura_3236-78.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\textures\PicsArt_11-30-01.25.29.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\textures\PicsArt_11-30-01.28.08.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\textures\textura dragon.tif">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\textures\textura-fondo-alfombra-roja_103740-96.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\textures\textura-superficie-rugosa-pintada-amarillo-dorado-dorado_89245-406.jpg">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>
