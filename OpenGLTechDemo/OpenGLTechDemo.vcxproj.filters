@@ -1658,13 +1658,17 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="assimp-vc141-mt.dll" />
-    <None Include="Shaders\fragmentShader.frag" />
-    <None Include="Shaders\vertexShader.vert" />
     <None Include="Shaders\lighting.vert" />
     <None Include="Shaders\lighting.frag" />
     <None Include="Shaders\light_cube.vert" />
     <None Include="Shaders\light_cube.frag" />
     <None Include="Resources\textures\dragon cinema.fbx" />
+    <None Include="Shaders\modelShader.frag" />
+    <None Include="Shaders\modelShader.vert" />
+    <None Include="Shaders\blending.vert" />
+    <None Include="Shaders\blending.frag" />
+    <None Include="Shaders\framebuffer.vert" />
+    <None Include="Shaders\framebuffer.frag" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="Dependencies\ASSIMP\lib\assimp-vc141-mt.lib" />
