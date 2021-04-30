@@ -30,6 +30,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window);
 unsigned int loadTexture(char const * path);
+unsigned int loadCubemap(std::vector<std::string> faces);
 
 const unsigned int SCR_WIDTH = 1280, SCR_HEIGHT = 720;
 
@@ -48,6 +49,7 @@ float lastFrame = 0.0f;
 const unsigned int NR_POINT_LIGHTS = 4;
 const unsigned int NR_SPOT_LIGHTS = 1;
 
+// post processing effects
 enum Kernels {
 	DISABLED,
 	BLUR_KERNEL,
@@ -55,6 +57,9 @@ enum Kernels {
 	GRAYSCALE
 };
 unsigned int activeKernel = 0;
+
+// active lighting method (Phong or BlinnPhong)
+bool blinnPhong = true;
 
 int main()
 {
@@ -76,7 +81,7 @@ int main()
 	glfwSetCursorPosCallback(mainWindow, mouse_callback);
 	glfwSetKeyCallback(mainWindow, key_callback);
 	glfwSetScrollCallback(mainWindow, scroll_callback);
-	//glfwSetInputMode(mainWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	glfwSetInputMode(mainWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	//initialize glad
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
@@ -91,16 +96,15 @@ int main()
 	ImGui::StyleColorsDark();
 	ImGui_ImplOpenGL3_Init((char*)glGetString(330));
 	
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
 	// load shaders
-	Shader lightingShader	("Shaders/lighting.vert", "Shaders/lighting.frag");
-	Shader lightCubeShader	("Shaders/light_cube.vert", "Shaders/light_cube.frag");
+	Shader lightingShader	("Shaders/lighting.vert",	 "Shaders/lighting.frag");
+	Shader lightCubeShader	("Shaders/light_cube.vert",  "Shaders/light_cube.frag");
 	Shader modelShader		("Shaders/modelShader.vert", "Shaders/modelShader.frag");
-	Shader blendingShader	("Shaders/blending.vert", "Shaders/blending.frag");
+	Shader blendingShader	("Shaders/blending.vert",	 "Shaders/blending.frag");
 	Shader framebufferShader("Shaders/framebuffer.vert", "Shaders/framebuffer.frag");
+	Shader skyboxShader		("Shaders/skybox.vert",		 "Shaders/skybox.frag");
+	Shader reflectShader	("Shaders/reflect.vert",	 "Shaders/reflect.frag");
+	Shader refractShader	("Shaders/refract.vert",	 "Shaders/refract.frag");
 
 	// load models
 	Model house("Resources/Models/House/house.obj");
@@ -108,7 +112,7 @@ int main()
 
 	
 	// cubes
-	// -------------------
+	// ----------------------------------------------	
 	// set up cube vertices
 	float vertices[] = {
 		  // positions		     // Normals				// texCoords
@@ -200,19 +204,21 @@ int main()
 	
 	
 	// floor
-	// -----------
+	// ----------------------------------------------	
 	// load and create floor texture
-	unsigned int floor = loadTexture("Resources/metal.png");
+	unsigned int floor = loadTexture("Resources/wood.png");
+
+
 	lightingShader.use();
 	lightingShader.setInt("floor", 0);
 
 	// set up floor vertices
 	float floorVertices[] = {
 		 -10.0f, -10.0f, -10.0f,    0.0f,  0.0f, -1.0f,    0.0f, 0.0f,
-		  10.0f, -10.0f, -10.0f,    0.0f,  0.0f, -1.0f,    1.0f, 0.0f,
-		  10.0f,  10.0f, -10.0f,    0.0f,  0.0f, -1.0f,    1.0f, 1.0f,
-		  10.0f,  10.0f, -10.0f,    0.0f,  0.0f, -1.0f,    1.0f, 1.0f,
-		 -10.0f,  10.0f, -10.0f,    0.0f,  0.0f, -1.0f,    0.0f, 1.0f,
+		  10.0f, -10.0f, -10.0f,    0.0f,  0.0f, -1.0f,    10.0f, 0.0f,
+		  10.0f,  10.0f, -10.0f,    0.0f,  0.0f, -1.0f,    10.0f, 10.0f,
+		  10.0f,  10.0f, -10.0f,    0.0f,  0.0f, -1.0f,    10.0f, 10.0f,
+		 -10.0f,  10.0f, -10.0f,    0.0f,  0.0f, -1.0f,    0.0f, 10.0f,
 		 -10.0f, -10.0f, -10.0f,    0.0f,  0.0f, -1.0f,    0.0f, 0.0f
 	};
 
@@ -247,7 +253,7 @@ int main()
 	
 	
 	// lights
-	// -----------
+	// ----------------------------------------------	
 	// point light positions
 	glm::vec3 pointLightPositions[] = {
 		glm::vec3(1.61f,  2.41f, -13.09f),
@@ -269,13 +275,11 @@ int main()
 	
 	
 	// vegetation
-	// ----------
+	// ----------------------------------------------	
 	// load and create grass texture
 	unsigned int grass = loadTexture("Resources/grass.png");
 	blendingShader.use();
 	blendingShader.setInt("texture1", 0);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
 	// grass vertices
 	float transparentVertices[] = {
@@ -316,12 +320,11 @@ int main()
 	
 	
 	// windows
-	// ----------------
+	// ----------------------------------------------	
 	unsigned int transparentWindow = loadTexture("Resources/window.png");
 	blendingShader.use();
 	blendingShader.setInt("texture1", 0);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
 	// window locations
 	std::vector<glm::vec3> windows
 	{
@@ -334,7 +337,7 @@ int main()
 
 	
 	// custom framebuffer for vfx
-	// --------------------------	
+	// ----------------------------------------------	
 	float quadVertices[] = { // vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
 		// positions   // texCoords
 		-1.0f,  1.0f,  0.0f, 1.0f,
@@ -386,8 +389,81 @@ int main()
 	}
 	
 	
+	// skybox
+	// ----------------------------------------------	
+	float skyboxVertices[] = {
+		// positions          
+		-1.0f,  1.0f, -1.0f,
+		-1.0f, -1.0f, -1.0f,
+		 1.0f, -1.0f, -1.0f,
+		 1.0f, -1.0f, -1.0f,
+		 1.0f,  1.0f, -1.0f,
+		-1.0f,  1.0f, -1.0f,
+
+		-1.0f, -1.0f,  1.0f,
+		-1.0f, -1.0f, -1.0f,
+		-1.0f,  1.0f, -1.0f,
+		-1.0f,  1.0f, -1.0f,
+		-1.0f,  1.0f,  1.0f,
+		-1.0f, -1.0f,  1.0f,
+
+		 1.0f, -1.0f, -1.0f,
+		 1.0f, -1.0f,  1.0f,
+		 1.0f,  1.0f,  1.0f,
+		 1.0f,  1.0f,  1.0f,
+		 1.0f,  1.0f, -1.0f,
+		 1.0f, -1.0f, -1.0f,
+
+		-1.0f, -1.0f,  1.0f,
+		-1.0f,  1.0f,  1.0f,
+		 1.0f,  1.0f,  1.0f,
+		 1.0f,  1.0f,  1.0f,
+		 1.0f, -1.0f,  1.0f,
+		-1.0f, -1.0f,  1.0f,
+
+		-1.0f,  1.0f, -1.0f,
+		 1.0f,  1.0f, -1.0f,
+		 1.0f,  1.0f,  1.0f,
+		 1.0f,  1.0f,  1.0f,
+		-1.0f,  1.0f,  1.0f,
+		-1.0f,  1.0f, -1.0f,
+
+		-1.0f, -1.0f, -1.0f,
+		-1.0f, -1.0f,  1.0f,
+		 1.0f, -1.0f, -1.0f,
+		 1.0f, -1.0f, -1.0f,
+		-1.0f, -1.0f,  1.0f,
+		 1.0f, -1.0f,  1.0f
+	};
+
+	// load skybox texture
+	std::vector<std::string> faces{
+			"Resources/skybox/right.jpg",
+			"Resources/skybox/left.jpg",
+			"Resources/skybox/top.jpg",
+			"Resources/skybox/bottom.jpg",
+			"Resources/skybox/front.jpg",
+			"Resources/skybox/back.jpg"
+	};
+	unsigned int cubemapTexture = loadCubemap(faces);
+
+	// configure skybox
+	unsigned int skyboxVAO, skyboxVBO;	
+	{
+		glGenVertexArrays(1, &skyboxVAO);
+		glGenBuffers(1, &skyboxVBO);
+		glBindVertexArray(skyboxVAO);
+		glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+		
+		skyboxShader.use();
+		skyboxShader.setInt("skybox", 0);
+	}
+
 	// ImGUI state
-	// ------------
+	// ----------------------------------------------	
 	ImVec4 clearColor = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 	// house
 	glm::vec3	HRotateAxis	 = glm::vec3(1.0f, 0.0f, 0.0f);
@@ -409,6 +485,9 @@ int main()
 		glm::vec3(1.00f, 0.15, 0.15)  // red
 	};
 
+	// mirror pos
+	glm::vec3	MTranslate = glm::vec3(25.0f, 0.5f, -15.0f);
+	glm::vec3	RTranslate = glm::vec3(15.0f, -48.96f, 0.0f);
 
 	//render loop
 	while (!glfwWindowShouldClose(mainWindow)) {
@@ -435,15 +514,53 @@ int main()
 		glClearColor(clearColor.x, clearColor.y, clearColor.z, clearColor.w);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		// draw floor
-		// ---------------------------
+		// draw cubes
+		// ----------------------------------------------	
 		{
+			// draw reflective cube
+			reflectShader.use();
+			glm::mat4 model = glm::mat4(1.0f);
+			glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+			glm::mat4 view = camera.GetViewMatrix();
+			reflectShader.setMat4("projection", projection);
+			reflectShader.setMat4("view", view);
+			model = glm::scale(model, glm::vec3(0.1f, 10.0f, 10.0f));
+			model = glm::translate(model, MTranslate);
+			reflectShader.setMat4("model", model);
+			reflectShader.setVec3("cameraPos", camera.Position);
+			reflectShader.setInt("skybox", 0);
+
+			glBindVertexArray(cubeVAO);
+			glActiveTexture(GL_TEXTURE0);
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+
+			// draw refractive cube
+			refractShader.use();
+			model = glm::mat4(1.0f);
+			projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+			view = camera.GetViewMatrix();
+			refractShader.setMat4("projection", projection);
+			refractShader.setMat4("view", view);
+			model = glm::scale(model, glm::vec3(0.1f, 10.0f, 10.0f));
+			model = glm::translate(model, RTranslate);
+			refractShader.setMat4("model", model);
+			refractShader.setVec3("cameraPos", camera.Position);
+
+			glBindVertexArray(cubeVAO);
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+		}
+
+		// draw floor
+		// ----------------------------------------------	
+		{
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 			glDisable(GL_CULL_FACE);
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, floor);
 			lightingShader.use();
 			// set floor light source uniforms
-			DirectionalLight directionalLight = DirectionalLight(lightingShader, glm::vec3(1.0f), glm::vec3(0.05f, 0.05f, 0.05f), glm::vec3(0.4f, 0.4f, 0.4f), glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(0.0f, -1.0f, 0.3f));
+			DirectionalLight directionalLight = DirectionalLight(lightingShader, glm::vec3(0.1f), glm::vec3(0.05f, 0.05f, 0.05f), glm::vec3(0.4f, 0.4f, 0.4f), glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(0.0f, -1.0f, 0.3f));
 			PointLight pointLights[NR_POINT_LIGHTS] = {
 				PointLight(lightingShader, lightColors[0], glm::vec3(0.05f, 0.05f, 0.05f), glm::vec3(0.8f, 0.8f, 0.8f), glm::vec3(1.0f), pointLightPositions[0], 1.0f, 0.09, 0.032),
 				PointLight(lightingShader, lightColors[1], glm::vec3(0.05f, 0.05f, 0.05f), glm::vec3(0.8f, 0.8f, 0.8f), glm::vec3(1.0f), pointLightPositions[1], 1.0f, 0.09, 0.032),
@@ -470,8 +587,9 @@ int main()
 			lightingShader.setMat4("projection", projection);
 			lightingShader.setMat4("view", view);
 			lightingShader.setMat4("model", model);
+			lightingShader.setInt("blinnPhong", blinnPhong);
 			Material shinyMaterial = Material(lightingShader);
-			shinyMaterial.UseMaterial(4.0f, 256);
+			shinyMaterial.UseMaterial(4.0f, 32);
 
 			// draw floor
 			glBindVertexArray(floorVAO);
@@ -485,14 +603,14 @@ int main()
 		}
 
 		// draw models
-		// ------------
+		// ----------------------------------------------	
 		{
 			glEnable(GL_CULL_FACE);
 			glFrontFace(GL_CCW);
 			glCullFace(GL_BACK);
 			modelShader.use();
 			// set model light source uniforms
-			DirectionalLight directionalLight = DirectionalLight(modelShader, glm::vec3(1.0f), glm::vec3(0.05f, 0.05f, 0.05f), glm::vec3(0.4f, 0.4f, 0.4f), glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(0.0f, -1.0f, 0.3f));
+			DirectionalLight directionalLight = DirectionalLight(modelShader, glm::vec3(0.1f), glm::vec3(0.05f, 0.05f, 0.05f), glm::vec3(0.4f, 0.4f, 0.4f), glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(0.0f, -1.0f, 0.3f));
 			PointLight pointLights[NR_POINT_LIGHTS] = {
 				PointLight(modelShader, lightColors[0], glm::vec3(0.05f, 0.05f, 0.05f), glm::vec3(0.8f, 0.8f, 0.8f), glm::vec3(1.0f), pointLightPositions[0], 1.0f, 0.09, 0.032),
 				PointLight(modelShader, lightColors[1], glm::vec3(0.05f, 0.05f, 0.05f), glm::vec3(0.8f, 0.8f, 0.8f), glm::vec3(1.0f), pointLightPositions[1], 1.0f, 0.09, 0.032),
@@ -534,7 +652,7 @@ int main()
 		}
 
 		// lighting
-		// ----------------------
+		// ----------------------------------------------	
 		{
 			// draw the lamp object
 			lightCubeShader.use();
@@ -574,8 +692,10 @@ int main()
 		}
 
 		// draw grasses
-		// ------------
+		// ----------------------------------------------	
 		{
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 			glDisable(GL_CULL_FACE);
 			blendingShader.use();
 			glm::mat4 model = glm::mat4(1.0f);
@@ -593,11 +713,14 @@ int main()
 				glDrawArrays(GL_TRIANGLES, 0, 6);
 			}
 			glEnable(GL_CULL_FACE);
+			glDisable(GL_BLEND);
 		}
 
 		// draw windows
-		// --------------
+		// ----------------------------------------------	
 		{
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 			glDisable(GL_CULL_FACE);
 			// sort the transparent windows before rendering
 			std::map<float, glm::vec3> sorted;
@@ -622,6 +745,27 @@ int main()
 				glDrawArrays(GL_TRIANGLES, 0, 6);
 			}
 			glEnable(GL_CULL_FACE);
+			glDisable(GL_BLEND);
+		}
+		
+		// draw skybox
+		// ----------------------------------------------	
+		{
+			glm::mat4 view = camera.GetViewMatrix();
+			glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+			// draw skybox as last
+			glDepthFunc(GL_LEQUAL);
+			skyboxShader.use();
+			view = glm::mat4(glm::mat3(camera.GetViewMatrix()));
+			skyboxShader.setMat4("view", view);
+			skyboxShader.setMat4("projection", projection);
+			// skybox cube
+			glBindVertexArray(skyboxVAO);
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+			glBindVertexArray(0);
+			glDepthFunc(GL_LESS);
 		}
 		
 		// bind back to default framebuffer and draw a quad plane with the attached framebuffer color texture
@@ -640,7 +784,7 @@ int main()
 
 
 		// ImGui
-		// ----------		
+		// ----------------------------------------------	
 		{
 			ImGui::Begin("Transformations");                          // Create a window called "Hello, world!" and append into it.
 
@@ -677,7 +821,13 @@ int main()
 			for (size_t i = 0; i < 5; i++) {
 				std::string slidername = "Window " + std::to_string(i);
 				ImGui::SliderFloat3(slidername.c_str(), glm::value_ptr(windows[i]), -25.0f, 25.0f);
-			}
+			}					   
+
+			// translate mirror
+			ImGui::SliderFloat3("Reflect ", glm::value_ptr(MTranslate), -25.0f, 25.0f);
+
+			// translate refractive glass
+			ImGui::SliderFloat3("Refract ", glm::value_ptr(RTranslate), -25.0f, 25.0f);
 
 			ImGui::ColorEdit3("clear color", (float*)&clearColor); // Edit 3 floats representing a color			
 
@@ -685,6 +835,8 @@ int main()
 			ImGui::End();
 		}
 
+		std::cout << (blinnPhong ? "Blinn-Phong" : "Phong") << std::endl;
+		
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
@@ -760,10 +912,16 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 // ----------------------------------------------------------------------
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-	if (key == GLFW_KEY_LEFT_CONTROL && action == GLFW_PRESS) {
-		enableCameraMovement = !enableCameraMovement;
-		firstMouse = true;
+	if (key == GLFW_KEY_LEFT_CONTROL && action == GLFW_PRESS && enableCameraMovement) {
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+		enableCameraMovement = false;
+	} else if(key == GLFW_KEY_LEFT_CONTROL && action == GLFW_PRESS && !enableCameraMovement){
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		enableCameraMovement = true;
 	}
+
+	if (key == GLFW_KEY_B && action == GLFW_PRESS)
+		blinnPhong = !blinnPhong;
 
 	if (key == GLFW_KEY_0 && action == GLFW_PRESS)
 		activeKernel = 0;
@@ -812,6 +970,33 @@ unsigned int loadTexture(char const * path)
 		std::cout << "Texture failed to load at path: " << path << std::endl;
 		stbi_image_free(data);
 	}
+
+	return textureID;
+}
+
+unsigned int loadCubemap(std::vector<std::string> faces)
+{
+	unsigned int textureID;
+	glGenTextures(1, &textureID);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+
+	int width, height, nrChannels;
+	for (size_t i = 0; i < faces.size(); i++) {
+		unsigned char* data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
+		if (data) {
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+			stbi_image_free(data);
+		} else {
+			std::cout << "Cubemap texture failed to load at path: " << faces[i] << std::endl;
+			stbi_image_free(data);
+		}
+	}
+
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
 	return textureID;
 }

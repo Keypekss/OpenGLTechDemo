@@ -1669,6 +1669,12 @@
     <None Include="Shaders\blending.frag" />
     <None Include="Shaders\framebuffer.vert" />
     <None Include="Shaders\framebuffer.frag" />
+    <None Include="Shaders\skybox.vert" />
+    <None Include="Shaders\skybox.frag" />
+    <None Include="Shaders\reflect.vert" />
+    <None Include="Shaders\reflect.frag" />
+    <None Include="Shaders\refract.vert" />
+    <None Include="Shaders\refract.frag" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="Dependencies\ASSIMP\lib\assimp-vc141-mt.lib" />
