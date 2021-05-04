@@ -1675,6 +1675,10 @@
     <None Include="Shaders\reflect.frag" />
     <None Include="Shaders\refract.vert" />
     <None Include="Shaders\refract.frag" />
+    <None Include="Shaders\dirShadowMapDepth.vert" />
+    <None Include="Shaders\dirShadowMapDepth.frag" />
+    <None Include="Shaders\debug_quad.vert" />
+    <None Include="Shaders\debug_quad.frag" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="Dependencies\ASSIMP\lib\assimp-vc141-mt.lib" />

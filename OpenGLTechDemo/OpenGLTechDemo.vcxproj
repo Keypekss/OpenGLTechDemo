@@ -682,6 +682,10 @@
     <None Include="Dependencies\GLM\glm\gtx\wrap.inl" />
     <None Include="Resources\textures\dragon cinema.fbx" />
     <None Include="Shaders\blending.vert" />
+    <None Include="Shaders\debug_quad.frag" />
+    <None Include="Shaders\debug_quad.vert" />
+    <None Include="Shaders\dirShadowMapDepth.frag" />
+    <None Include="Shaders\dirShadowMapDepth.vert" />
     <None Include="Shaders\framebuffer.frag" />
     <None Include="Shaders\framebuffer.vert" />
     <None Include="Shaders\modelShader.frag" />
